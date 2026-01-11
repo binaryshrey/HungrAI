@@ -14,8 +14,31 @@ import {
 } from "@remixicon/react";
 import Image from "next/image";
 import ProfileMenu from "../../components/Profile/ProfileMenu";
+import { PREDICT_ENDPOINT } from "@/utils/Constants";
 
 /************************************************************ IMPORTS ************************************************************/
+
+interface Prediction {
+  filename: string;
+  label: string;
+  confidence: number;
+}
+
+interface Recipe {
+  id: number;
+  title: string;
+  score: number;
+  matched: string[];
+  missing: string[];
+  instructions: string[];
+}
+
+interface AnalyzeIngredientsResponse {
+  predictions: Prediction[];
+  ingredients: string[];
+  recipes: Recipe[];
+  candidate_count: number;
+}
 
 interface UploadIngredientsProps {
   user: {
@@ -87,6 +110,18 @@ const UploadIngredients = ({ user }: UploadIngredientsProps) => {
     setError("");
     setLoading(true);
 
+    if (recipeFiles.length === 0) {
+      setError("Please upload at least one image");
+      setLoading(false);
+      return;
+    }
+
+    if (recipeFiles.length > 10) {
+      setError("Maximum 10 images allowed");
+      setLoading(false);
+      return;
+    }
+
     try {
       // Create FormData and append all files
       const formData = new FormData();
@@ -94,28 +129,43 @@ const UploadIngredients = ({ user }: UploadIngredientsProps) => {
         formData.append("files", file);
       });
 
+      console.log("Sending request to:", PREDICT_ENDPOINT);
+
       // Make POST request to the predict endpoint
-      const response = await fetch("https://hungr-ai.onrender.com/predict", {
+      const response = await fetch(PREDICT_ENDPOINT, {
         method: "POST",
         body: formData,
+      }).catch((fetchError) => {
+        console.error("Fetch error:", fetchError);
+        throw new Error(
+          `Cannot connect to backend server at ${PREDICT_ENDPOINT}. Please ensure the backend is running on port 8000.`
+        );
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${response.status}`
+        );
       }
 
-      const data = await response.json();
+      const data: AnalyzeIngredientsResponse = await response.json();
       console.log("API Response:", data);
 
-      // Store the response in localStorage to pass to recipes page
+      // Store the response in localStorage to pass to dashboard page
       localStorage.setItem("recipeResults", JSON.stringify(data));
 
-      // Navigate to recipes page
-      window.location.href = "/recipes";
+      // Navigate to dashboard page
+      window.location.href = "/dashboard";
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Upload failed");
-      setLoading(false);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Upload failed. Please try again.";
+      setError(errorMessage);
       console.error("Error uploading files:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -235,7 +285,7 @@ const UploadIngredients = ({ user }: UploadIngredientsProps) => {
                     </div>
                   );
                 })}
-                {recipeFiles.length < 8 && uploadBoxSmall()}
+                {recipeFiles.length < 10 && uploadBoxSmall()}
               </div>
             )}
           </div>
