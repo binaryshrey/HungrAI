@@ -14,7 +14,7 @@ import {
 } from "@remixicon/react";
 import Image from "next/image";
 import ProfileMenu from "../../components/Profile/ProfileMenu";
-import { PREDICT_ENDPOINT } from "@/utils/Constants";
+import { PREDICT_AND_SAVE_ENDPOINT } from "@/utils/Constants";
 
 /************************************************************ IMPORTS ************************************************************/
 
@@ -129,16 +129,25 @@ const UploadIngredients = ({ user }: UploadIngredientsProps) => {
         formData.append("files", file);
       });
 
-      console.log("Sending request to:", PREDICT_ENDPOINT);
+      // Build URL with query parameters for user information
+      const url = new URL(PREDICT_AND_SAVE_ENDPOINT);
+      if (user.email) {
+        url.searchParams.append("user_email", user.email);
+      }
+      // Use email as user_id if available, otherwise generate one
+      const userId = user.email || `user_${Date.now()}`;
+      url.searchParams.append("user_id", userId);
 
-      // Make POST request to the predict endpoint
-      const response = await fetch(PREDICT_ENDPOINT, {
+      console.log("Sending request to:", url.toString());
+
+      // Make POST request to the predict-and-save endpoint
+      const response = await fetch(url.toString(), {
         method: "POST",
         body: formData,
       }).catch((fetchError) => {
         console.error("Fetch error:", fetchError);
         throw new Error(
-          `Cannot connect to backend server at ${PREDICT_ENDPOINT}. Please ensure the backend is running on port 8000.`
+          `Cannot connect to backend server at ${PREDICT_AND_SAVE_ENDPOINT}. Please ensure the backend is running on port 8000.`
         );
       });
 

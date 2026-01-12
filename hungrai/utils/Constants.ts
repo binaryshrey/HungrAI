@@ -6,3 +6,4 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://hungrai-backend-cpi3ekcjvq-uc.a.run.app";
 export const PREDICT_ENDPOINT = `${API_BASE_URL}/predict`;
+export const PREDICT_AND_SAVE_ENDPOINT = `${API_BASE_URL}/predict-and-save`;

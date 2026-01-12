@@ -258,7 +258,7 @@ export default function Navbar({ children }: NavbarProps) {
           </div>
           <main className="flex-1 bg-black">
             <div className="py-4">
-              <div className="mx-auto max-w-7xl">
+              <div className="mx-auto max-w-7xl px-2 sm:px-2 md:px-4">
                 <div className="py-2 hidden lg:block">{children}</div>
                 <div className="py-2 overflow-y-auto lg:hidden">{children}</div>
               </div>
