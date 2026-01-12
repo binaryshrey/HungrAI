@@ -158,14 +158,19 @@ const UploadIngredients = ({ user }: UploadIngredientsProps) => {
         );
       }
 
-      const data: AnalyzeIngredientsResponse = await response.json();
+      const data: AnalyzeIngredientsResponse & { record_id?: string } =
+        await response.json();
       console.log("API Response:", data);
 
-      // Store the response in localStorage to pass to dashboard page
-      localStorage.setItem("recipeResults", JSON.stringify(data));
+      // Get the prediction ID from the response
+      const predictionId = data.record_id || `temp_${Date.now()}`;
 
-      // Navigate to dashboard page
-      window.location.href = "/dashboard";
+      // Store the response in localStorage to pass to prediction page
+      localStorage.setItem("recipeResults", JSON.stringify(data));
+      localStorage.setItem("predictionId", predictionId);
+
+      // Navigate to prediction page with the ID
+      window.location.href = `/prediction/${predictionId}`;
     } catch (error) {
       const errorMessage =
         error instanceof Error
@@ -242,7 +247,7 @@ const UploadIngredients = ({ user }: UploadIngredientsProps) => {
       <div className="relative z-10">
         <div className="px-6 pt-6 lg:px-8">
           <nav className="flex items-center justify-between">
-            <a href="/dashboard" className="-m-1.5 p-1.5">
+            <a href="/upload_ingredients" className="-m-1.5 p-1.5">
               <img className="h-8" src="/logo.svg" alt="demoday-ai" />
             </a>
             <div className="lg:flex lg:flex-1 lg:justify-end">
