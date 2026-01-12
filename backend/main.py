@@ -8,9 +8,14 @@ import io
 from PIL import Image
 import os
 from dotenv import load_dotenv
+from supabase import create_client, Client
+from datetime import datetime
+from pydantic import BaseModel
 
 # Load environment variables
 load_dotenv()
+print(f"🔧 Current working directory: {os.getcwd()}")
+print(f"🔧 .env file exists: {os.path.exists('.env')}")
 
 app = FastAPI(title="HungrAI Backend API", version="1.0.0")
 
@@ -27,6 +32,24 @@ app.add_middleware(
 GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "your-project-id")
 VERTEX_LOCATION = os.getenv("VERTEX_LOCATION", "us-central1")
 
+# Supabase Configuration
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+print(f"🔧 SUPABASE_URL: {SUPABASE_URL}")
+print(f"🔧 SUPABASE_KEY: {'***' + SUPABASE_KEY[-10:] if SUPABASE_KEY else None}")
+
+# Initialize Supabase client
+supabase: Client = None
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print(f"✅ Supabase initialized: {SUPABASE_URL}")
+    except Exception as e:
+        print(f"⚠️ Failed to initialize Supabase: {str(e)}")
+else:
+    print("⚠️ Supabase credentials not found in environment variables")
+
 # Initialize Vertex AI at module level (similar to DemoDay-AI pattern)
 vertexai.init(project=GOOGLE_CLOUD_PROJECT, location=VERTEX_LOCATION)
 print(f"✅ Vertex AI initialized: project={GOOGLE_CLOUD_PROJECT}, location={VERTEX_LOCATION}")
@@ -34,7 +57,7 @@ print(f"✅ Vertex AI initialized: project={GOOGLE_CLOUD_PROJECT}, location={VER
 @app.get("/health", tags=["health"])
 def health_check():
     return {
-        "status": "ok"
+        "status": "alive"
     }
 
 def image_to_base64(image_bytes: bytes) -> str:
@@ -242,4 +265,129 @@ async def analyze_ingredients(files: List[UploadFile] = File(...)):
     result = await identify_ingredients_and_suggest_recipes(image_parts, filenames)
     
     # Return in Hungr-AI format
+    return result
+
+
+# Pydantic model for prediction data
+class PredictionData(BaseModel):
+    user_id: str = None  # Optional user identifier
+    user_email: str = None  # Optional user email
+    predictions: List[dict]
+    ingredients: List[str]
+    recipes: List[dict]
+    candidate_count: int
+    metadata: dict = None  # Optional additional metadata
+
+
+@app.post("/save-prediction", tags=["recipes"])
+async def save_prediction(data: PredictionData):
+    """
+    Save prediction results to Supabase database.
+    
+    Args:
+        data: PredictionData object containing prediction results
+        
+    Returns:
+        JSON object with success status and saved record ID
+    """
+    if not supabase:
+        raise HTTPException(
+            status_code=503,
+            detail="Supabase is not configured. Please set SUPABASE_URL and SUPABASE_KEY environment variables."
+        )
+    
+    try:
+        # Prepare data for insertion
+        record = {
+            "user_id": data.user_id,
+            "user_email": data.user_email,
+            "predictions": data.predictions,
+            "ingredients": data.ingredients,
+            "recipes": data.recipes,
+            "candidate_count": data.candidate_count,
+            "metadata": data.metadata or {},
+            "created_at": datetime.utcnow().isoformat()
+        }
+        
+        print(f"📝 Attempting to insert record: {record}")
+        
+        # Insert into Supabase
+        response = supabase.table("prediction_history").insert(record).execute()
+        
+        print(f"✅ Supabase response: {response}")
+        print(f"✅ Response data: {response.data}")
+        
+        return {
+            "success": True,
+            "message": "Prediction saved successfully",
+            "record_id": response.data[0]["id"] if response.data else None,
+            "timestamp": record["created_at"]
+        }
+        
+    except Exception as e:
+        print(f"❌ Error saving to Supabase: {str(e)}")
+        print(f"❌ Error type: {type(e).__name__}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error saving prediction to database: {str(e)}"
+        )
+
+
+@app.post("/predict-and-save", tags=["recipes"])
+async def analyze_and_save_ingredients(
+    files: List[UploadFile] = File(...),
+    user_id: str = None,
+    user_email: str = None
+):
+    """
+    Analyze uploaded images to identify ingredients and suggest recipes,
+    then automatically save the results to Supabase.
+    
+    Args:
+        files: List of image files (JPEG, PNG, WebP)
+        user_id: Optional user identifier for tracking
+        user_email: Optional user email for tracking
+        
+    Returns:
+        JSON object with predictions, ingredients, recipes, and save confirmation
+    """
+    # First, get the prediction results
+    result = await analyze_ingredients(files)
+    
+    print(f"🔍 Prediction result: {result}")
+    print(f"🔍 User ID: {user_id}, User Email: {user_email}")
+    
+    # Then save to Supabase if configured
+    if supabase:
+        try:
+            prediction_data = PredictionData(
+                user_id=user_id,
+                user_email=user_email,
+                predictions=result.get("predictions", []),
+                ingredients=result.get("ingredients", []),
+                recipes=result.get("recipes", []),
+                candidate_count=result.get("candidate_count", 0),
+                metadata={
+                    "file_count": len(files),
+                    "filenames": [f.filename for f in files]
+                }
+            )
+            
+            print(f"💾 Calling save_prediction...")
+            save_result = await save_prediction(prediction_data)
+            print(f"✅ Save result: {save_result}")
+            result["saved"] = True
+            result["record_id"] = save_result.get("record_id")
+            result["saved_at"] = save_result.get("timestamp")
+        except Exception as e:
+            print(f"❌ Error in predict-and-save: {str(e)}")
+            result["saved"] = False
+            result["save_error"] = str(e)
+    else:
+        print("⚠️ Supabase not configured")
+        result["saved"] = False
+        result["save_error"] = "Supabase not configured"
+    
     return result
