@@ -391,3 +391,49 @@ async def analyze_and_save_ingredients(
         result["save_error"] = "Supabase not configured"
     
     return result
+
+
+@app.get("/predictions", tags=["recipes"])
+async def get_predictions(user_email: str = None, limit: int = 50):
+    """
+    Fetch prediction history from Supabase database.
+    
+    Args:
+        user_email: Optional user email to filter predictions
+        limit: Maximum number of records to return (default: 50)
+        
+    Returns:
+        JSON array of prediction records
+    """
+    if not supabase:
+        raise HTTPException(
+            status_code=503,
+            detail="Supabase is not configured. Please set SUPABASE_URL and SUPABASE_KEY environment variables."
+        )
+    
+    try:
+        # Build query
+        query = supabase.table("prediction_history").select("*")
+        
+        # Filter by user_email if provided
+        if user_email:
+            query = query.eq("user_email", user_email)
+        
+        # Order by created_at descending and limit results
+        query = query.order("created_at", desc=True).limit(limit)
+        
+        # Execute query
+        response = query.execute()
+        
+        print(f"✅ Fetched {len(response.data)} predictions for user: {user_email or 'all'}")
+        
+        return response.data
+        
+    except Exception as e:
+        print(f"❌ Error fetching predictions: {str(e)}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching predictions from database: {str(e)}"
+        )
