@@ -10,8 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, ChefHat, Clock, Users } from "lucide-react";
+import { Loader2, ChefHat, Clock, Users, Check } from "lucide-react";
 import { GET_PREDICTIONS_ENDPOINT } from "@/utils/Constants";
+import { addToShoppingList, isInShoppingList } from "@/utils/shoppingList";
 
 interface Recipe {
   id: number;
@@ -45,6 +46,33 @@ export default function RecipesClient({ user }: RecipesClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [recipeDialogOpen, setRecipeDialogOpen] = useState(false);
+  const [shoppingListItems, setShoppingListItems] = useState<Set<string>>(
+    new Set()
+  );
+
+  // Load shopping list items on mount
+  useEffect(() => {
+    if (user?.email) {
+      const items = isInShoppingList("", user.email); // We'll check each item individually
+      setShoppingListItems(new Set());
+    }
+  }, [user?.email]);
+
+  const handleAddToShoppingList = (ingredient: string) => {
+    if (!user?.email) return;
+
+    const added = addToShoppingList(ingredient, user.email);
+    if (added) {
+      setShoppingListItems(
+        (prev) => new Set([...prev, ingredient.toLowerCase()])
+      );
+    }
+  };
+
+  const checkIfInShoppingList = (ingredient: string): boolean => {
+    if (!user?.email) return false;
+    return isInShoppingList(ingredient, user.email);
+  };
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -206,7 +234,7 @@ export default function RecipesClient({ user }: RecipesClientProps) {
                   backgroundSize: "calc(84px * 1.732) 84px",
                 }}
               ></div>
-              
+
               {/* Recipe Details */}
               <div className="p-4">
                 <div className="flex items-start justify-between mb-3">
@@ -306,7 +334,7 @@ export default function RecipesClient({ user }: RecipesClientProps) {
             <div className="space-y-6">
               {/* Matched Ingredients */}
               <div>
-                <h3 className="text-lg font-semibold mb-3 text-green-400">
+                <h3 className="text-lg font-semibold mb-3 text-white">
                   Matched Ingredients
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -325,19 +353,29 @@ export default function RecipesClient({ user }: RecipesClientProps) {
               {/* Missing Ingredients */}
               {selectedRecipe.missing.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-3 text-orange-400">
-                    Additional Ingredients Needed
+                  <h3 className="text-lg font-semibold mb-3 text-white">
+                    Additional Ingredients Needed (Click to add to shopping
+                    list)
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {selectedRecipe.missing.map((ingredient, idx) => (
-                      <Badge
-                        key={idx}
-                        variant="outline"
-                        className="bg-orange-900/30 text-orange-300 border-orange-800"
-                      >
-                        {ingredient}
-                      </Badge>
-                    ))}
+                    {selectedRecipe.missing.map((ingredient, idx) => {
+                      const inList = checkIfInShoppingList(ingredient);
+                      return (
+                        <Badge
+                          key={idx}
+                          variant="outline"
+                          className={`${
+                            inList
+                              ? "bg-green-900/30 text-green-300 border-green-800"
+                              : "bg-orange-900/30 text-orange-300 border-orange-800"
+                          } cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1`}
+                          onClick={() => handleAddToShoppingList(ingredient)}
+                        >
+                          {ingredient}
+                          {inList && <Check className="h-3 w-3" />}
+                        </Badge>
+                      );
+                    })}
                   </div>
                 </div>
               )}

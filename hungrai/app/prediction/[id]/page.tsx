@@ -10,8 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
+import { addToShoppingList, isInShoppingList } from "@/utils/shoppingList";
 
 interface Prediction {
   filename: string;
@@ -45,6 +46,35 @@ export default function PredictionPage() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [recipeDialogOpen, setRecipeDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [shoppingListItems, setShoppingListItems] = useState<Set<string>>(
+    new Set()
+  );
+
+  // Get user email from localStorage or session
+  useEffect(() => {
+    // Try to get user email from various sources
+    const storedEmail = localStorage.getItem("userEmail");
+    if (storedEmail) {
+      setUserEmail(storedEmail);
+    }
+  }, []);
+
+  const handleAddToShoppingList = (ingredient: string) => {
+    if (!userEmail) return;
+
+    const added = addToShoppingList(ingredient, userEmail);
+    if (added) {
+      setShoppingListItems(
+        (prev) => new Set([...prev, ingredient.toLowerCase()])
+      );
+    }
+  };
+
+  const checkIfInShoppingList = (ingredient: string): boolean => {
+    if (!userEmail) return false;
+    return isInShoppingList(ingredient, userEmail);
+  };
 
   useEffect(() => {
     const fetchPrediction = async () => {
@@ -326,17 +356,27 @@ export default function PredictionPage() {
                 {selectedRecipe.missing.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold mb-3 text-white">
-                      Ingredients Required To Complete Recipe
+                      Additional Ingredients Needed (Click to add to shopping
+                      list)
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {selectedRecipe.missing.map((ingredient, idx) => (
-                        <Badge
-                          key={idx}
-                          className="bg-orange-900/30 text-orange-400 border-orange-800 hover:bg-orange-900/40 capitalize"
-                        >
-                          {ingredient}
-                        </Badge>
-                      ))}
+                      {selectedRecipe.missing.map((ingredient, idx) => {
+                        const inList = checkIfInShoppingList(ingredient);
+                        return (
+                          <Badge
+                            key={idx}
+                            className={`${
+                              inList
+                                ? "bg-green-900/30 text-green-400 border-green-800"
+                                : "bg-orange-900/30 text-orange-400 border-orange-800"
+                            } cursor-pointer hover:opacity-80 transition-opacity capitalize flex items-center gap-1`}
+                            onClick={() => handleAddToShoppingList(ingredient)}
+                          >
+                            {ingredient}
+                            {inList && <Check className="h-3 w-3" />}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

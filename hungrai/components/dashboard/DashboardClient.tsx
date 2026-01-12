@@ -58,6 +58,13 @@ export default function DashboardClient({
     });
   };
 
+  // Store user email in localStorage for use in other components
+  useEffect(() => {
+    if (userEmail) {
+      localStorage.setItem("userEmail", userEmail);
+    }
+  }, [userEmail]);
+
   useEffect(() => {
     const fetchPredictions = async () => {
       if (!userEmail) {
