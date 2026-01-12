@@ -1,19 +1,20 @@
-export default function RecipesPage() {
-  return (
-    <div className="bg-black min-h-screen">
-      <div className="flex justify-between items-center text-center gap-16 md:gap-0 mb-8">
-        <h1 className="text-white font-semibold text-3xl md:text-4xl">
-          Recipes
-        </h1>
-      </div>
+import RecipesClient from "./RecipesClient";
+import { withAuth } from "@workos-inc/authkit-nextjs";
 
-      <div className="shrink-0 border-t border-zinc-800 mt-4 mb-8"></div>
+export default async function RecipesPage() {
+  const { user } = await withAuth();
 
-      <div className="mt-8">
-        <p className="text-neutral-300 text-lg">
-          This is the Recipes page. Here you can browse and manage your recipes.
-        </p>
+  if (!user) {
+    return (
+      <div className="bg-black min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white text-xl mb-4">
+            Please log in to view your recipes.
+          </p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return <RecipesClient user={user} />;
 }
