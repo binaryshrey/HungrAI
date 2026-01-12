@@ -151,13 +151,13 @@ export default function PredictionPage() {
   }
 
   return (
-    <div className="bg-black min-h-screen">
+    <div className="bg-black min-h-screen px-4 lg:px-0">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-white font-semibold text-3xl md:text-4xl">
+            <h1 className="text-white font-semibold text-2xl md:text-2xl">
               Your Recipe Recommendations
             </h1>
             <p className="text-neutral-400 text-sm mt-2">
@@ -176,7 +176,7 @@ export default function PredictionPage() {
 
         {/* Ingredients Identified Section */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-white mb-6">
+          <h2 className="text-2xl font-bold text-white mb-6">
             Ingredients Identified
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -205,7 +205,7 @@ export default function PredictionPage() {
 
         {/* Suggested Recipes Section */}
         <div>
-          <h2 className="text-3xl font-bold text-white mb-6">
+          <h2 className="text-2xl font-bold text-white mb-6">
             Suggested Recipes
           </h2>
           <p className="text-neutral-400 mb-8">

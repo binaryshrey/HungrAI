@@ -46,7 +46,7 @@ export default function ShoppingListPage() {
 
   const handleBuyGroceries = () => {
     // Create a search query with all items
-    const searchQuery = shoppingList.join(", ");
+    const searchQuery = "instacart : " + shoppingList.join(", ");
     const googleShoppingUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(
       searchQuery
     )}`;
@@ -60,13 +60,13 @@ export default function ShoppingListPage() {
           <h1 className="text-white font-semibold text-2xl">Shopping List</h1>
         </div>
         <div className="shrink-0 border-t border-zinc-800 mt-4 mb-8"></div>
-        <p className="text-neutral-400">Loading...</p>
+        <p className="text-neutral-400">Loading</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-black min-h-screen">
+    <div className="bg-black min-h-screen px-4 lg:px-0">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-white font-semibold text-2xl">Shopping List</h1>
