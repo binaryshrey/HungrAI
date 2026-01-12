@@ -7,14 +7,15 @@ export default function CTA({ signInUrl }: { signInUrl: string }) {
       <div className="relative isolate px-6 lg:px-8">
         <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
           <div className="text-center">
-            <h4 className="text-3xl font-bold tracking-tight text-white sm:text-3xl">
+            <h4 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
               Smarter food choices starts here.
             </h4>
-            <h4 className="text-3xl font-bold tracking-tight text-white sm:text-3xl">
+            <h4 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
               Start using HungrAI today!
             </h4>
-            <p className="mt-6 text-sm leading-8 text-gray-500">
-              Personalized meal recommendations, powered by Google Gemini.
+            <p className="mt-6 text-sm leading-8 text-gray-500  sm:text-base tracking-tight">
+              Personalized meal recommendations,
+              <br /> powered by Google Gemini.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link

@@ -8,6 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BETTERSTACK_URI } from "@/utils/Constants";
 import { ArrowRight } from "lucide-react";
 
 const logo = "/logo.svg";
@@ -92,10 +93,10 @@ export default function HeroSection({
               Github
             </a>
             <a
-              href="/collections"
+              href={BETTERSTACK_URI}
               className="text-sm font-semibold leading-6 text-white cursor-pointer"
             >
-              Collections
+              Status
             </a>
             <a
               href="https://in.linkedin.com/in/shreyanshsaurabh"
@@ -142,10 +143,10 @@ export default function HeroSection({
                     Github
                   </a>
                   <a
-                    href="/collections"
+                    href={BETTERSTACK_URI}
                     className="-mx-3 block rounded-lg py-2 px-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-400/10 cursor-pointer"
                   >
-                    Collections
+                    Status
                   </a>
                   <a
                     href="https://in.linkedin.com/in/shreyanshsaurabh"

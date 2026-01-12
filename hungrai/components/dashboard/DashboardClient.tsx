@@ -152,7 +152,7 @@ export default function DashboardClient({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-3 h-3" />
           <Input
             type="text"
-            placeholder="Search your predictions"
+            placeholder="Search your ingredients..."
             className="pl-10 bg-zinc-900 border-zinc-800 text-white placeholder:text-neutral-500"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

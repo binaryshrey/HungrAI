@@ -33,12 +33,7 @@ const Footer = () => {
           >
             Status
           </Link>
-          <Link
-            href="/#features"
-            className="text-white/80 hover:text-white text-sm font-medium transition-colors"
-          >
-            Features
-          </Link>
+
           <Link
             href={LINKEDIN_URI}
             target="_blank"

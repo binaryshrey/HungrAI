@@ -1,6 +1,6 @@
 export const GITHUB_URI = "https://github.com/binaryshrey/HungrAI";
 export const LINKEDIN_URI = "https://www.linkedin.com/in/shreyanshsaurabh/";
-export const BETTERSTACK_URI = "https://status.hungr.ai";
+export const BETTERSTACK_URI = "https://hungr-ai.betteruptime.com/";
 export const HUNGRAI_URI = "https://hungr-ai.vercel.app";
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
