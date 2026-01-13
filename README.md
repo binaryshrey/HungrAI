@@ -1,6 +1,4 @@
-# HungrAI
-
-![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?logo=tailwind-css&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white) ![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?logo=google-cloud&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+# HungrAI ![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?logo=tailwind-css&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)  ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white) ![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?logo=google-cloud&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white) 
 
 HungrAI is an AI-powered recipe discovery platform that transforms ingredient photos into personalized recipe recommendations. Using advanced computer vision powered by Google Gemini on Vertex AI, HungrAI identifies ingredients from uploaded images and suggests creative, practical recipes that match what you already have in your kitchen.
 ![banner](https://github.com/binaryshrey/Portfolio/blob/main/app/assets/hungrai.webp)
@@ -59,6 +57,8 @@ Unlike traditional recipe apps that require manual input, HungrAI streamlines th
 
 ## Architecture Overview
 
+![arch](https://github.com/binaryshrey/HungrAI/blob/main/hungrai/public/image.png)
+
 **Flow:**
 
 1. User uploads ingredient photos through Next.js frontend
@@ -67,6 +67,116 @@ Unlike traditional recipe apps that require manual input, HungrAI streamlines th
 4. Gemini analyzes images and returns ingredient predictions + recipe suggestions
 5. Results are stored in Supabase for prediction history
 6. Frontend displays recipes with match scores and instructions
+
+## Core User Flow
+
+### 1. Sign Up & Authentication
+
+Users sign in through WorkOS AuthKit, which provides secure authentication and session management. Upon successful login, users are redirected to the dashboard.
+
+![signup](https://raw.githubusercontent.com/binaryshrey/HungrAI/refs/heads/main/hungrai/public/dashboard.png)
+
+### 2. Upload Ingredients
+
+From the dashboard, users navigate to the "Upload Ingredients" page where they can:
+
+- Select multiple ingredient photos from their device
+- Preview selected images before upload
+- Submit for AI analysis
+
+![upload](https://raw.githubusercontent.com/binaryshrey/HungrAI/refs/heads/main/hungrai/public/upload.png)
+
+### 3. AI Processing & Recipe Display
+
+The backend:
+
+- Validates uploaded images (format and size)
+- Converts images to base64 for Vertex AI processing
+- Sends images to Gemini 2.5 Flash with structured prompts
+- Receives ingredient predictions and recipe suggestions
+- **Detected ingredients** with confidence scores
+- **Recipe cards** showing:
+  - Recipe title and match score
+  - Matched ingredients (what you have)
+  - Missing ingredients (what you need)
+  - Cooking instructions
+![prediction](https://raw.githubusercontent.com/binaryshrey/HungrAI/refs/heads/main/hungrai/public/prediction.png)
+
+
+
+### 4. History Tracking
+
+All predictions are stored in Supabase with:
+
+- User email association
+- Timestamp of prediction
+- Full ingredient and recipe data
+- Metadata for filtering and sorting
+
+![recipes](https://raw.githubusercontent.com/binaryshrey/HungrAI/refs/heads/main/hungrai/public/recipes.png)
+
+### 5. Dashboard View
+
+Users can view their prediction history on the dashboard:
+
+- Recent scans displayed in chronological order
+- Quick access to past recipe suggestions
+- Filter by date or ingredients
+
+![dashboard](https://raw.githubusercontent.com/binaryshrey/HungrAI/refs/heads/main/hungrai/public/dashboard.png)
+
+
+### 6. Shopping Cart and Instacart
+![cart](https://raw.githubusercontent.com/binaryshrey/HungrAI/refs/heads/main/hungrai/public/cart.png)
+![shop](https://raw.githubusercontent.com/binaryshrey/HungrAI/refs/heads/main/hungrai/public/shop.png)
+
+
+
+## API Overview
+
+![backend](https://raw.githubusercontent.com/binaryshrey/HungrAI/refs/heads/main/hungrai/public/backend.png)
+
+
+### `GET /health`
+
+**Use when:** Checking service availability  
+**Returns:** `{"status": "alive"}`
+
+### `POST /predict`
+
+**Use when:** Uploading ingredient images for analysis  
+**Request:** Multipart form-data with image files  
+**Returns:** JSON with predictions, ingredients, and recipes
+
+```json
+{
+  "predictions": [
+    {
+      "filename": "image1.jpg",
+      "label": "tomato",
+      "confidence": 0.95
+    }
+  ],
+  "ingredients": ["tomato", "onion", "garlic"],
+  "recipes": [
+    {
+      "id": 1,
+      "title": "Tomato Pasta",
+      "score": 0.85,
+      "matched": ["tomato", "onion", "garlic"],
+      "missing": ["pasta", "olive oil"],
+      "instructions": ["Boil pasta...", "Sauté onions...", "Add tomatoes..."]
+    }
+  ],
+  "candidate_count": 5
+}
+```
+
+### `GET /predictions`
+
+**Use when:** Fetching user prediction history  
+**Query params:** `user_email`, `limit`  
+**Returns:** Array of prediction records with timestamps
 
 ## Key Features
 
@@ -115,100 +225,6 @@ Gemini drives intelligent recipe suggestions:
 - **Environment isolation** - Separate dev/prod configurations
 - **Health monitoring** - `/health` endpoint for uptime checks
 
-## Core User Flow
-
-### 1. Sign Up & Authentication
-
-Users sign in through WorkOS AuthKit, which provides secure authentication and session management. Upon successful login, users are redirected to the dashboard.
-
-### 2. Upload Ingredients
-
-From the dashboard, users navigate to the "Upload Ingredients" page where they can:
-
-- Select multiple ingredient photos from their device
-- Preview selected images before upload
-- Submit for AI analysis
-
-### 3. AI Processing
-
-The backend:
-
-- Validates uploaded images (format and size)
-- Converts images to base64 for Vertex AI processing
-- Sends images to Gemini 2.5 Flash with structured prompts
-- Receives ingredient predictions and recipe suggestions
-
-### 4. Recipe Display
-
-Results are formatted and displayed with:
-
-- **Detected ingredients** with confidence scores
-- **Recipe cards** showing:
-  - Recipe title and match score
-  - Matched ingredients (what you have)
-  - Missing ingredients (what you need)
-  - Cooking instructions
-- **Candidate count** - Total number of suggestions generated
-
-### 5. History Tracking
-
-All predictions are stored in Supabase with:
-
-- User email association
-- Timestamp of prediction
-- Full ingredient and recipe data
-- Metadata for filtering and sorting
-
-### 6. Dashboard View
-
-Users can view their prediction history on the dashboard:
-
-- Recent scans displayed in chronological order
-- Quick access to past recipe suggestions
-- Filter by date or ingredients
-
-## API Overview
-
-### `GET /health`
-
-**Use when:** Checking service availability  
-**Returns:** `{"status": "alive"}`
-
-### `POST /predict`
-
-**Use when:** Uploading ingredient images for analysis  
-**Request:** Multipart form-data with image files  
-**Returns:** JSON with predictions, ingredients, and recipes
-
-```json
-{
-  "predictions": [
-    {
-      "filename": "image1.jpg",
-      "label": "tomato",
-      "confidence": 0.95
-    }
-  ],
-  "ingredients": ["tomato", "onion", "garlic"],
-  "recipes": [
-    {
-      "id": 1,
-      "title": "Tomato Pasta",
-      "score": 0.85,
-      "matched": ["tomato", "onion", "garlic"],
-      "missing": ["pasta", "olive oil"],
-      "instructions": ["Boil pasta...", "Sauté onions...", "Add tomatoes..."]
-    }
-  ],
-  "candidate_count": 5
-}
-```
-
-### `GET /predictions`
-
-**Use when:** Fetching user prediction history  
-**Query params:** `user_email`, `limit`  
-**Returns:** Array of prediction records with timestamps
 
 ## Development Setup
 
@@ -237,21 +253,18 @@ HungrAI/
 │   ├── requirements.txt      # Python dependencies
 │   └── Dockerfile            # Container configuration
 ├── hungrai/                  # Next.js frontend
-│   ├── app/                  # Next.js App Router
-│   │   ├── dashboard/        # Dashboard pages
-│   │   ├── upload_ingredients/ # Image upload interface
-│   │   ├── actions/          # Server actions
-│   │   └── callback/         # Auth callbacks
-│   ├── components/           # React components
-│   │   ├── dashboard/        # Dashboard components
-│   │   ├── home/             # Landing page components
-│   │   └── ui/               # Reusable UI components
-│   └── utils/                # Utilities and constants
-└── DATABASE_INTEGRATION.md   # Database documentation
+    ├── app/                  # Next.js App Router
+    │   ├── dashboard/        # Dashboard pages
+    │   ├── upload_ingredients/ # Image upload interface
+    │   ├── actions/          # Server actions
+    │   └── callback/         # Auth callbacks
+    ├── components/           # React components│   │   ├── dashboard/        # Dashboard components
+    │   ├── home/             # Landing page components
+    │   └── ui/               # Reusable UI components
+    └── utils/                # Utilities and constants
+
 ```
 
 ## License
 
 Apache License 2.0
-
----
