@@ -151,7 +151,7 @@ export default function PredictionPage() {
   }
 
   return (
-    <div className="bg-black min-h-screen px-4 lg:px-0">
+    <div className="bg-black min-h-screen px-4 lg:px-2">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto">
         {/* Header */}
