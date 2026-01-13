@@ -66,7 +66,7 @@ export default function ShoppingListPage() {
   }
 
   return (
-    <div className="bg-black min-h-screen px-4 lg:px-0">
+    <div className="bg-black min-h-screen px-4 lg:px-2">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-white font-semibold text-2xl">Shopping List</h1>
